@@ -1,4 +1,5 @@
 pandas==2.2.3
+numpy==2.2.5
 typing==3.7.4.3
 openai==1.76.0
 SQLAlchemy==2.0.40
