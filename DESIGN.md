@@ -230,10 +230,9 @@ Each tool is a thin wrapper that calls one or more of these helpers.
 | `search_quote_history(search_terms, limit)` | Joins `quotes` with `quote_requests` and filters rows where either the original request text or the quote explanation contains any of the given keywords (case-insensitive LIKE). Returns up to `limit` records ordered by most recent date. **Backs the `get_similar_quotes` tool.** |
 | `run_test_scenarios()` | The test harness: initialises the database, loads `quote_requests_sample.csv`, iterates over each request in date order, calls the multi-agent system, re-reads the financial position after each call, and saves all results to `test_results.csv`. |
 
-> **Note:** `search_quote_history` references the column `qr.response` in its SQL query,
-> but the `quote_requests` table stores the text in a column named `request`
-> (matching the CSV header). This is a bug in the starter code; the query will
-> silently return zero results until the column name is corrected to `qr.request`.
+> **Note:** The original starter code referenced `qr.request` in the `search_quote_history`
+> SQL query, but the `quote_requests` table stores the customer text in a column named
+> `response` (matching the CSV header). This was corrected in the implementation to `qr.response`.
 
 ---
 

@@ -551,7 +551,7 @@ def search_quote_history(search_terms: List[str], limit: int = 5) -> List[Dict]:
     for i, term in enumerate(search_terms):
         param_name = f"term_{i}"
         conditions.append(
-            f"(LOWER(qr.request) LIKE :{param_name} OR "
+            f"(LOWER(qr.response) LIKE :{param_name} OR "
             f"LOWER(q.quote_explanation) LIKE :{param_name})"
         )
         params[param_name] = f"%{term.lower()}%"
@@ -562,7 +562,7 @@ def search_quote_history(search_terms: List[str], limit: int = 5) -> List[Dict]:
     # Final SQL query to join quotes with quote_requests
     query = f"""
         SELECT
-            qr.request AS original_request,
+            qr.response AS original_request,
             q.total_amount,
             q.quote_explanation,
             q.job_type,
@@ -944,6 +944,24 @@ def _build_orchestrator() -> ToolCallingAgent:
         api_key=api_key,
     )
 
+    _catalog_hint = (
+        "IMPORTANT: Always call list_catalog_items first to get the exact catalog "
+        "item names. Only use item names that appear verbatim in the catalog response "
+        "- never guess, shorten, or paraphrase them. "
+        "CRITICAL: Complete every requested action NOW by calling the appropriate tools. "
+        "Never say 'I will do X' or 'I am going to do X' - actually call the tool and do it. "
+        "When reporting delivery dates, only use the exact date string returned by a tool call "
+        "- never invent, estimate, or paraphrase a date. "
+        "Always end your task by calling final_answer with a concise summary of what was done "
+        "and the exact tool-returned values (quantities, prices, delivery dates)."
+    )
+
+    _inventory_hint = _catalog_hint + (
+        " Do NOT call restock_all_low_inventory unless the customer explicitly asks "
+        "for a full inventory restock of all items. For individual items use "
+        "place_supplier_restock instead. Never restock proactively without being asked."
+    )
+
     inventory_agent = ToolCallingAgent(
         tools=[
             list_catalog_items,
@@ -960,7 +978,8 @@ def _build_orchestrator() -> ToolCallingAgent:
             "prices, place individual supplier restock orders, or auto-restock all "
             "items that have fallen below their minimum levels."
         ),
-        max_steps=5,
+        max_steps=15,
+        instructions=_inventory_hint,
     )
 
     quoting_agent = ToolCallingAgent(
@@ -978,7 +997,8 @@ def _build_orchestrator() -> ToolCallingAgent:
             "search historical quote records for similar past orders, or look up "
             "catalog pricing."
         ),
-        max_steps=5,
+        max_steps=10,
+        instructions=_catalog_hint,
     )
 
     sales_agent = ToolCallingAgent(
@@ -994,7 +1014,8 @@ def _build_orchestrator() -> ToolCallingAgent:
             "Use to process a confirmed sale (updates inventory and records revenue), "
             "verify available cash on hand, or confirm stock before committing."
         ),
-        max_steps=5,
+        max_steps=10,
+        instructions=_catalog_hint,
     )
 
     orchestrator = ToolCallingAgent(
@@ -1006,7 +1027,19 @@ def _build_orchestrator() -> ToolCallingAgent:
             "Top-level orchestrator for the Beaver's Choice Paper Company system. "
             "Routes customer inquiries to the appropriate specialist agent."
         ),
-        max_steps=10,
+        max_steps=20,
+        instructions=(
+            "You are the orchestrator for Beaver's Choice Paper Company. "
+            "You must COMPLETE every customer request, not describe it. "
+            "Delegate each part of the request to the correct specialist agent and "
+            "wait for its confirmed result before moving on. "
+            "Always instruct each specialist to: (1) call list_catalog_items first, "
+            "(2) use only exact catalog names, (3) actually execute all requested "
+            "transactions, (4) report only dates and amounts returned by tool calls. "
+            "Do not return a final answer until all actions (inventory checks, quotes, "
+            "and sales) have been completed and confirmed by the specialist agents. "
+            "Always end with a final_answer that summarises confirmed outcomes."
+        ),
     )
     return orchestrator
 
@@ -1034,11 +1067,24 @@ def handle_customer_request(request: str) -> str:
         The agent's plain-text response string.
     """
     agent = _get_orchestrator()
-    try:
-        result = agent.run(request)
-        return str(result)
-    except Exception as exc:
-        return f"Error processing request: {exc}"
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            result = agent.run(request)
+            return str(result)
+        except Exception as exc:
+            error_str = str(exc)
+            is_network = any(k in error_str for k in (
+                "httpcore", "httpx", "RemoteProtocolError", "ConnectionError",
+                "ReadTimeout", "ConnectTimeout", "Connection", "EOF",
+            ))
+            if is_network and attempt < max_retries - 1:
+                wait = 10 * (attempt + 1)
+                print(f"  [Retry {attempt+1}/{max_retries-1}] Network error, waiting {wait}s: {exc}")
+                time.sleep(wait)
+            else:
+                return f"Error processing request: {exc}"
+    return "Error: all retries exhausted"
 
 def run_test_scenarios():
     """
@@ -1127,7 +1173,7 @@ def run_test_scenarios():
             }
         )
 
-        time.sleep(1)
+        time.sleep(3)
 
     # Final report
     final_date = quote_requests_sample["request_date"].max().strftime("%Y-%m-%d")
