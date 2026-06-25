@@ -611,7 +611,29 @@ def search_quote_history(search_terms: List[str], limit: int = 5) -> List[Dict]:
 # Run your test scenarios by writing them here. Make sure to keep track of them.
 
 def run_test_scenarios():
-    
+    """
+    End-to-end test harness for the multi-agent system.
+
+    Workflow:
+    1. Calls init_database() to create a fresh SQLite database with inventory,
+       historical quotes, and an opening cash balance of $50,000.
+    2. Loads quote_requests_sample.csv, parses request dates, and sorts rows
+       chronologically so requests are processed in order.
+    3. Snapshots the initial financial position via generate_financial_report().
+    4. Iterates over every sample request:
+       - Prints context (requester role, event, date, current cash/inventory).
+       - Appends the request date to the request text so agents have full context.
+       - Passes the combined text to the multi-agent system (to be wired in).
+       - Re-reads the financial report after the agent call to reflect any sales
+         or restock transactions the agents recorded in the database.
+       - Appends a result row (request_id, date, cash, inventory, response).
+    5. Prints a final financial report showing end-of-run cash and inventory value.
+    6. Writes all result rows to test_results.csv.
+
+    Returns:
+        list[dict]: One dict per processed request containing request_id,
+                    request_date, cash_balance, inventory_value, and response.
+    """
     print("Initializing Database...")
     init_database()
     try:

@@ -22,17 +22,17 @@ The agents share a SQLite database and a product catalogue defined in code.
 
 ## Tool Roster
 
-| Tool | Owner Agent | Purpose |
-|---|---|---|
-| `list_catalog_items` | Inventory | Returns every item name and unit price in the catalogue. |
-| `check_item_stock` | Inventory | Returns the current stock level for one named item as of a given date. |
-| `list_available_inventory` | Inventory | Returns all items that have stock > 0 on a given date. |
-| `get_similar_quotes` | Quoting | Searches historical quotes by keyword for pricing benchmarks. |
-| `calculate_quote` | Quoting | Applies tiered bulk discounts and returns an itemised quote total. |
-| `get_current_cash_balance` | Fulfillment | Returns the company's net cash position on a given date. |
-| `process_sale_transaction` | Fulfillment | Writes a sales record to the database after verifying sufficient stock. |
-| `place_supplier_restock` | Supplier | Places a single-item purchase order; returns cost and delivery date. |
-| `restock_all_low_inventory` | Supplier | Scans every tracked item and auto-restocks those below minimum levels. |
+| Tool | Owner Agent | Backing Helper(s) | Purpose |
+|---|---|---|---|
+| `list_catalog_items` | Inventory | *(catalogue constant)* | Returns every item name and unit price from the in-memory `paper_supplies` list — used to map customer descriptions to exact catalogue names. |
+| `check_item_stock` | Inventory | `get_stock_level` | Returns the net stock for one named item as of a given date; returns 0 if the item has never been stocked or is fully sold. |
+| `list_available_inventory` | Inventory | `get_all_inventory` | Returns a dict of all items whose current net stock is > 0; useful for a broad availability overview. |
+| `get_similar_quotes` | Quoting | `search_quote_history` | Searches historical quotes by keyword across request text and quote explanations; used to benchmark new quotes against past pricing. |
+| `calculate_quote` | Quoting | *(CATALOG_PRICES constant)* | Pure-Python pricing engine: applies tiered per-item bulk discounts and an order-level multi-item discount, returning a full itemised breakdown. |
+| `get_current_cash_balance` | Fulfillment | `get_cash_balance` | Returns the company's net cash (sales revenue minus stock purchases) as of a given date; used before recording a sale to confirm solvency. |
+| `process_sale_transaction` | Fulfillment | `get_stock_level` + `create_transaction` | Verifies available stock, then writes a `sales` record via `create_transaction`; returns transaction IDs on success. |
+| `place_supplier_restock` | Supplier | `get_supplier_delivery_date` + `create_transaction` | Computes delivery date based on quantity, costs the order at catalogue unit price, and writes a `stock_orders` record via `create_transaction`. |
+| `restock_all_low_inventory` | Supplier | `get_stock_level` + *(calls `place_supplier_restock` logic)* | Iterates every row in the `inventory` reference table; for each item whose current stock < `min_stock_level`, places an order for 3× the minimum. |
 
 ---
 
@@ -212,7 +212,32 @@ erDiagram
 
 ---
 
-## Design Decisions
+## Helper Functions Provided in the Starter Code
+
+These functions form the data layer that agent tools are built on.
+Each tool is a thin wrapper that calls one or more of these helpers.
+
+| Function | Description |
+|---|---|
+| `generate_sample_inventory(paper_supplies, coverage, seed)` | Randomly selects `coverage × N` items from the full catalogue and assigns each a starting stock (200–800 units) and minimum stock level (50–150 units). Used once by `init_database` to seed the `inventory` table. Not called by agents directly. |
+| `init_database(db_engine, seed)` | One-time setup: creates the `transactions`, `quote_requests`, `quotes`, and `inventory` tables; loads the CSV files; and inserts an opening cash entry of $50,000 plus one `stock_orders` transaction per stocked item. Called by `run_test_scenarios` before any agent is invoked. |
+| `create_transaction(item_name, transaction_type, quantity, price, date)` | Appends one row to the `transactions` table. `transaction_type` must be `'sales'` (reduces effective inventory, adds revenue) or `'stock_orders'` (adds inventory, costs cash). Returns the new row ID. **Both sale and restock tools call this.** |
+| `get_all_inventory(as_of_date)` | Computes net stock per item (sum of `stock_orders` minus sum of `sales`) up to and including the given date. Returns a `{item_name: stock}` dict containing only items with stock > 0. **Backs the `list_available_inventory` tool.** |
+| `get_stock_level(item_name, as_of_date)` | Same net-stock calculation as `get_all_inventory` but for a single named item; always returns a row even if stock is zero. **Backs the `check_item_stock` tool and the stock-verification step inside `process_sale_transaction`.** |
+| `get_supplier_delivery_date(input_date_str, quantity)` | Returns the estimated delivery date by adding a lead-time offset to the order date: same day (≤10 units), +1 day (≤100), +4 days (≤1000), +7 days (>1000). **Used inside the `place_supplier_restock` tool to set the delivery date on the restock transaction.** |
+| `get_cash_balance(as_of_date)` | Reads all transactions up to the given date and returns `total_sales − total_stock_purchases`. The opening $50,000 entry is counted as a `sales` record. **Backs the `get_current_cash_balance` tool.** |
+| `generate_financial_report(as_of_date)` | Combines `get_cash_balance`, a per-item stock valuation loop using `get_stock_level`, and a top-5 revenue query to produce a full financial snapshot dict. Used by `run_test_scenarios` to track state between requests; not exposed as an agent tool (too expensive to call in a tight loop). |
+| `search_quote_history(search_terms, limit)` | Joins `quotes` with `quote_requests` and filters rows where either the original request text or the quote explanation contains any of the given keywords (case-insensitive LIKE). Returns up to `limit` records ordered by most recent date. **Backs the `get_similar_quotes` tool.** |
+| `run_test_scenarios()` | The test harness: initialises the database, loads `quote_requests_sample.csv`, iterates over each request in date order, calls the multi-agent system, re-reads the financial position after each call, and saves all results to `test_results.csv`. |
+
+> **Note:** `search_quote_history` references the column `qr.response` in its SQL query,
+> but the `quote_requests` table stores the text in a column named `request`
+> (matching the CSV header). This is a bug in the starter code; the query will
+> silently return zero results until the column name is corrected to `qr.request`.
+
+---
+
+
 
 ### Why smolagents?
 `smolagents` is chosen as the orchestration framework because:
