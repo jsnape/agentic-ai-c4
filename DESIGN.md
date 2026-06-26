@@ -2,37 +2,40 @@
 
 ## Overview
 
-The system handles customer inquiries end-to-end using five specialised agents
+The system handles customer inquiries end-to-end using four specialised agents
 coordinated by a central orchestrator. All inputs and outputs are text-based.
 The agents share a SQLite database and a product catalogue defined in code.
 
 ---
 
-## Agent Roster (≤ 5 agents)
+## Agent Roster (4 agents, within the ≤ 5 limit)
 
 | Agent | Role |
 |---|---|
 | **Orchestrator** | Receives every customer request, decides the workflow, calls sub-agents in sequence, and compiles the final customer-facing response. |
-| **Inventory Agent** | Maps natural-language item names to exact catalogue entries and checks current stock levels. |
+| **Inventory Agent** | Maps natural-language item names to exact catalogue entries, checks current stock levels, and places supplier restock orders when needed. |
 | **Quoting Agent** | Looks up historical quotes for context, then calculates an itemised price with tiered bulk discounts. |
-| **Fulfillment Agent** | Verifies the company cash position and records confirmed sale transactions in the database. |
-| **Supplier Agent** | Places restock orders with the supplier for any item whose inventory has fallen below its minimum threshold. |
+| **Sales Agent** | Verifies the company cash position and records confirmed sale transactions in the database. |
 
 ---
 
 ## Tool Roster
 
-| Tool | Owner Agent | Backing Helper(s) | Purpose |
+Tools marked **shared** are registered on more than one agent so each agent can
+resolve catalogue names or verify stock without a round-trip through the
+orchestrator.
+
+| Tool | Agent(s) | Backing Helper(s) | Purpose |
 |---|---|---|---|
-| `list_catalog_items` | Inventory | *(catalogue constant)* | Returns every item name and unit price from the in-memory `paper_supplies` list — used to map customer descriptions to exact catalogue names. |
-| `check_item_stock` | Inventory | `get_stock_level` | Returns the net stock for one named item as of a given date; returns 0 if the item has never been stocked or is fully sold. |
+| `list_catalog_items` | Inventory, **Quoting** | *(catalogue constant)* | Returns every item name and unit price from the in-memory `paper_supplies` list. Shared so Quoting can resolve names without delegating back to Inventory. |
+| `check_item_stock` | Inventory, **Quoting**, **Sales** | `get_stock_level` | Returns net stock for one item as of a given date. Shared so Quoting can sanity-check availability while pricing and Sales can confirm stock before committing a transaction. |
 | `list_available_inventory` | Inventory | `get_all_inventory` | Returns a dict of all items whose current net stock is > 0; useful for a broad availability overview. |
-| `get_similar_quotes` | Quoting | `search_quote_history` | Searches historical quotes by keyword across request text and quote explanations; used to benchmark new quotes against past pricing. |
+| `place_supplier_restock` | Inventory | `get_supplier_delivery_date` + `create_transaction` | Computes delivery date based on quantity, costs the order at catalogue unit price, and writes a `stock_orders` record via `create_transaction`. |
+| `restock_all_low_inventory` | Inventory | `get_stock_level` + *(calls `place_supplier_restock` logic)* | Iterates every row in the `inventory` reference table; for each item whose current stock < `min_stock_level`, places an order for 3× the minimum. |
+| `search_historical_quotes` | Quoting | `search_quote_history` | Searches historical quotes by keyword across request text and quote explanations; used to benchmark new quotes against past pricing. |
 | `calculate_quote` | Quoting | *(CATALOG_PRICES constant)* | Pure-Python pricing engine: applies tiered per-item bulk discounts and an order-level multi-item discount, returning a full itemised breakdown. |
-| `get_current_cash_balance` | Fulfillment | `get_cash_balance` | Returns the company's net cash (sales revenue minus stock purchases) as of a given date; used before recording a sale to confirm solvency. |
-| `process_sale_transaction` | Fulfillment | `get_stock_level` + `create_transaction` | Verifies available stock, then writes a `sales` record via `create_transaction`; returns transaction IDs on success. |
-| `place_supplier_restock` | Supplier | `get_supplier_delivery_date` + `create_transaction` | Computes delivery date based on quantity, costs the order at catalogue unit price, and writes a `stock_orders` record via `create_transaction`. |
-| `restock_all_low_inventory` | Supplier | `get_stock_level` + *(calls `place_supplier_restock` logic)* | Iterates every row in the `inventory` reference table; for each item whose current stock < `min_stock_level`, places an order for 3× the minimum. |
+| `get_current_cash_balance` | Sales | `get_cash_balance` | Returns the company's net cash (sales revenue minus stock purchases) as of a given date; used before recording a sale to confirm solvency. |
+| `process_sale_transaction` | Sales | `get_stock_level` + `create_transaction` | Verifies available stock, then writes a `sales` record via `create_transaction`; returns transaction IDs on success. |
 
 ---
 
@@ -59,49 +62,48 @@ graph TD
     Customer --> Orchestrator
 
     subgraph Agents
-        Orchestrator(["🎯 Orchestrator\n(Chief Operations Officer)"])
-        Inventory(["📦 Inventory Agent"])
-        Quoting(["💰 Quoting Agent"])
-        Fulfillment(["✅ Fulfillment Agent"])
-        Supplier(["🚚 Supplier Agent"])
+        Orchestrator["Orchestrator\n(Chief Operations Officer)"]
+        Inventory["Inventory Agent"]
+        Quoting["Quoting Agent"]
+        Sales["Sales Agent"]
     end
 
-    subgraph InventoryTools["Inventory Tools"]
-        T1["list_catalog_items"]
-        T2["check_item_stock"]
+    subgraph InventoryTools["Inventory-only Tools"]
         T3["list_available_inventory"]
+        T4["place_supplier_restock"]
+        T5["restock_all_low_inventory"]
     end
 
-    subgraph QuotingTools["Quoting Tools"]
-        T4["get_similar_quotes"]
-        T5["calculate_quote"]
+    subgraph QuotingTools["Quoting-only Tools"]
+        T6["search_historical_quotes"]
+        T7["calculate_quote"]
     end
 
-    subgraph FulfillmentTools["Fulfillment Tools"]
-        T6["get_current_cash_balance"]
-        T7["process_sale_transaction"]
+    subgraph SalesTools["Sales-only Tools"]
+        T8["get_current_cash_balance"]
+        T9["process_sale_transaction"]
     end
 
-    subgraph SupplierTools["Supplier Tools"]
-        T8["place_supplier_restock"]
-        T9["restock_all_low_inventory"]
+    subgraph SharedTools["Shared Tools"]
+        T1["list_catalog_items\n(Inventory + Quoting)"]
+        T2["check_item_stock\n(Inventory + Quoting + Sales)"]
     end
 
-    Orchestrator -->|"1. Check availability"| Inventory
+    Orchestrator -->|"1. Check availability & restock"| Inventory
     Orchestrator -->|"2. Generate quote"| Quoting
-    Orchestrator -->|"3. Record sale"| Fulfillment
-    Orchestrator -->|"4. Restock check"| Supplier
+    Orchestrator -->|"3. Record sale"| Sales
 
-    Inventory --- T1 & T2 & T3
-    Quoting --- T4 & T5
-    Fulfillment --- T6 & T7
-    Supplier --- T8 & T9
+    Inventory --- T1 & T2 & T3 & T4 & T5
+    Quoting --- T1 & T2 & T6 & T7
+    Sales --- T2 & T8 & T9
 
     DB[(SQLite Database\ntransactions\ninventory\nquotes)]
-    T2 & T3 & T5 & T6 & T7 & T8 & T9 --> DB
+    T2 & T3 & T4 & T5 & T6 & T7 & T8 & T9 --> DB
 
     Orchestrator --> Response([Customer Response])
 ```
+
+![System Architecture](workflow.png)
 
 ---
 
@@ -110,43 +112,49 @@ graph TD
 ```mermaid
 sequenceDiagram
     actor Customer
+    participant HCR as handle_customer_request
     participant ORC as Orchestrator
     participant INV as Inventory Agent
     participant QUO as Quoting Agent
-    participant FUL as Fulfillment Agent
-    participant SUP as Supplier Agent
+    participant SAL as Sales Agent
     participant DB  as SQLite DB
+    participant SAN as sanitize_customer_response
 
-    Customer->>ORC: Request (items, quantities, date)
+    Customer->>HCR: Request (items, quantities, date)
+
+    HCR->>ORC: agent.run(request)
 
     ORC->>INV: "Check availability for [request]"
     INV->>DB: list_catalog_items()
-    INV->>DB: check_item_stock(item, date) × N
+    INV->>DB: check_item_stock(item, date) x N
     INV-->>ORC: Exact catalog names + stock levels
 
     alt Item out of stock
-        ORC->>SUP: "Restock [item] urgently"
-        SUP->>DB: place_supplier_restock(item, qty, date)
-        SUP-->>ORC: Delivery date confirmed
-        ORC->>INV: Re-check stock after restock
+        ORC->>INV: "Restock [item] urgently"
+        INV->>DB: place_supplier_restock(item, qty, date)
+        INV-->>ORC: Delivery date confirmed
     end
 
     ORC->>QUO: "Quote [items + quantities + date]"
-    QUO->>DB: get_similar_quotes(keywords)
+    QUO->>DB: search_historical_quotes(keywords)
     QUO->>QUO: calculate_quote(items_json, date)
-    QUO-->>ORC: Itemised quote with totals & discounts
+    QUO-->>ORC: Itemised quote with totals and discounts
 
-    ORC->>FUL: "Record sale [items + prices + date]"
-    FUL->>DB: get_current_cash_balance(date)
-    FUL->>DB: process_sale_transaction(items_json, date)
-    FUL-->>ORC: Transaction IDs + confirmation
+    ORC->>SAL: "Record sale [items + prices + date]"
+    SAL->>DB: get_current_cash_balance(date)
+    SAL->>DB: process_sale_transaction(items_json, date)
+    SAL-->>ORC: Transaction IDs + confirmation
 
-    ORC->>SUP: "Restock any low items after sale"
-    SUP->>DB: restock_all_low_inventory(date)
-    SUP-->>ORC: Items restocked + delivery dates
+    ORC-->>HCR: Raw response text
 
-    ORC-->>Customer: Quote breakdown · Total · Order # · Delivery ETA
+    HCR->>SAN: sanitize_customer_response(raw, request_date)
+    Note over SAN: Redact internal phrases\n(cash balance, database, etc.)\nFix hallucinated dates
+    SAN-->>HCR: Clean response
+
+    HCR-->>Customer: Quote breakdown, Total, Order number, Delivery ETA
 ```
+
+![Request Processing Sequence](sequence_diagram.png)
 
 ---
 
@@ -166,6 +174,8 @@ flowchart TD
     G & H & I & J --> K[Record stock_order transaction]
     K --> L[Notify Orchestrator of delivery date]
 ```
+
+![Inventory Reorder Flow](inventory_flow.png)
 
 ---
 
@@ -210,6 +220,49 @@ erDiagram
     QUOTE_REQUESTS ||--|| QUOTES : "fulfilled by"
 ```
 
+![Data Model](data_model.png)
+
+---
+
+## Response Sanitisation Layer
+
+All agent output passes through `sanitize_customer_response()` before being
+returned to the caller or written to `test_results.csv`. This keeps internal
+implementation details out of customer-facing text.
+
+### Phrase Redaction
+
+A table of blocked phrases is scanned with case-insensitive regex and each
+match is replaced with a safe alternative:
+
+| Blocked phrase | Replacement |
+|---|---|
+| `negative cash balance`, `insufficient cash` | `current availability constraints` |
+| `cash balance`, `cash on hand` | `our current financials` |
+| `supplier's financial difficulties`, `supplier financial` | `supply-chain constraints` |
+| `internal error` | `a temporary issue` |
+| `database`, `sqlite`, `sqlalchemy` | `our order system` |
+| `stack trace`, `traceback` | `a temporary issue` |
+| `exception` | `an issue` |
+
+### Date Hallucination Correction
+
+The request date (`Date of request: YYYY-MM-DD`) embedded in every agent
+prompt is extracted and used as a reference. Any date expression whose year
+differs from the request year by more than one year is rewritten in-place,
+keeping the day and month intact. Formats detected: `Month YYYY`,
+`YYYY-MM-DD`, and `MM/DD/YYYY`.
+
+### Error Fallback
+
+Unrecoverable exceptions (after network retries are exhausted) return the
+generic message:
+
+> *"We could not complete this request right now. Please try again or revise the order."*
+
+This prevents raw Python tracebacks or LLM error strings from reaching
+customers or appearing in the CSV output.
+
 ---
 
 ## Helper Functions Provided in the Starter Code
@@ -244,8 +297,8 @@ Each tool is a thin wrapper that calls one or more of these helpers.
 - It integrates directly with any OpenAI-compatible API via `OpenAIServerModel`.
 - Tools are defined with simple Python `@tool` decorators — no boilerplate schemas required.
 
-### Why five agents (not fewer)?
-Separating Inventory, Quoting, Fulfillment, and Supplier concerns keeps each agent's tool set small and its system prompt focused. A single monolithic agent would struggle to reliably follow a four-step workflow within a single ReAct loop.
+### Why four agents (not fewer)?
+Separating Inventory, Quoting, and Sales concerns keeps each agent's tool set small and its system prompt focused. A single monolithic agent would struggle to reliably follow a three-step workflow within a single ReAct loop. Supplier restock tools sit with the Inventory agent since restocking is a direct consequence of stock checks.
 
 ### Item name matching
 Customers rarely use exact catalogue names. The Inventory Agent is given the full catalogue on every call and instructed to identify the closest matching canonical name before any stock check or quote is generated. This prevents silent misses where an item exists in stock under a slightly different name.

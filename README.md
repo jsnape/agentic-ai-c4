@@ -21,6 +21,7 @@ This project challenges your ability to orchestrate agents using modern Python f
 From the `project.zip` starter archive, you will find:
 
 - `project_starter.py`: The main Python script you will modify to implement your agent system
+- `requirements.txt`: Python package dependencies — install with `pip install -r requirements.txt`
 - `quotes.csv`: Historical quote data used for reference by quoting agents
 - `quote_requests.csv`: Incoming customer requests used to build quoting logic
 - `quote_requests_sample.csv`: A set of simulated test cases to evaluate your system
@@ -33,31 +34,29 @@ All the files have been provided in the VS Code workspace on the Udacity platfor
 
 ## Local setup instructions
 
-1. Install dependencies
+1. **Install dependencies**
 
-Make sure you have Python 3.8+ installed.
+   Make sure you have Python 3.8+ installed.
 
-You can install all required packages using the provided requirements.txt file:
+   Install all required packages:
 
-`pip install -r requirements.txt`
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-If you're using smolagents, install it separately:
+2. **Create `.env` file**
 
-`pip install smolagents`
+   Add your OpenAI-compatible API key:
 
-For other options like pydantic-ai or npcsh[lite], refer to their documentation.
+   ```
+   UDACITY_OPENAI_API_KEY=your_openai_key_here
+   ```
 
-2. Create .env File
-
-Add your OpenAI-compatible API key:
-
-`UDACITY_OPENAI_API_KEY=your_openai_key_here`
-
-This project uses a custom OpenAI-compatible proxy hosted at https://openai.vocareum.com/v1.
+   This project uses a custom OpenAI-compatible proxy hosted at https://openai.vocareum.com/v1.
 
 ## How to Run the Project
 
-Start by defining your agents in the `"YOUR MULTI AGENT STARTS HERE"` section inside `template.py`. Once your agent team is ready:
+Start by defining your agents in the `"YOUR MULTI AGENT STARTS HERE"` section inside `project_starter.py`. Once your agent team is ready:
 
 1. Run the `run_test_scenarios()` function at the bottom of the script.
 2. This will simulate a series of customer requests.
@@ -86,7 +85,7 @@ Output will include:
 
 Make sure to submit the following files:
 
-1. Your completed `template.py` or `project_starter.py` with all agent logic
+1. Your completed `project_starter.py` with all agent logic
 2. A **workflow diagram** describing your agent architecture and data flow
 3. A `README.txt` or `design_notes.txt` explaining how your system works
 4. Outputs from your test run (like `test_results.csv`)

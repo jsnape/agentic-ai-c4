@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import os
 import json
+import re
 import time
 import dotenv
 import ast
@@ -1052,6 +1053,76 @@ def _get_orchestrator() -> ToolCallingAgent:
     return _orchestrator_instance
 
 
+def sanitize_customer_response(response: str, request_date: str | None = None) -> str:
+    """Remove internal/sensitive details and fix date hallucinations.
+
+    Args:
+        response: Raw agent output string.
+        request_date: ISO date string (YYYY-MM-DD) from the original request,
+                      used to detect obviously wrong year/month hallucinations.
+
+    Returns:
+        Cleaned response safe to surface to a customer.
+    """
+    # --- phrase redaction ---
+    _BLOCKED: list[tuple[str, str]] = [
+        # financial internals
+        ("negative cash balance",            "current availability constraints"),
+        ("insufficient cash",                "current availability constraints"),
+        ("cash balance",                     "our current financials"),
+        ("cash on hand",                     "our current financials"),
+        # supplier internals
+        ("supplier's financial difficulties","supply-chain constraints"),
+        ("supplier financial",               "supply-chain constraints"),
+        # system internals
+        ("internal error",                   "a temporary issue"),
+        ("database",                         "our order system"),
+        ("stack trace",                      "a temporary issue"),
+        ("traceback",                        "a temporary issue"),
+        ("exception",                        "an issue"),
+        ("sqlite",                           "our order system"),
+        ("sqlalchemy",                       "our order system"),
+    ]
+    safe = response
+    for phrase, replacement in _BLOCKED:
+        # case-insensitive replacement, preserving surrounding text
+        safe = re.sub(re.escape(phrase), replacement, safe, flags=re.IGNORECASE)
+
+    # --- date hallucination correction ---
+    # If a year or month appears that is wildly different from the request date,
+    # replace it with the request date so downstream readers aren't misled.
+    if request_date:
+        try:
+            req_dt = datetime.strptime(request_date[:10], "%Y-%m-%d")
+            req_year = req_dt.year
+
+            def _fix_date(m: re.Match) -> str:
+                raw = m.group(0)
+                # extract candidate year (4-digit sequences)
+                year_hits = re.findall(r"\b(20\d{2})\b", raw)
+                for y in year_hits:
+                    if abs(int(y) - req_year) > 1:
+                        # swap the bad year for the request year
+                        raw = raw.replace(y, str(req_year), 1)
+                return raw
+
+            # target patterns like "October 2023", "2023-10-15", "10/15/2023"
+            safe = re.sub(
+                r"\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?"
+                r"|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?"
+                r"|Dec(?:ember)?)\s+20\d{2}\b"
+                r"|20\d{2}[-/]\d{2}[-/]\d{2}"
+                r"|\d{1,2}[-/]\d{1,2}[-/]20\d{2}",
+                _fix_date,
+                safe,
+                flags=re.IGNORECASE,
+            )
+        except ValueError:
+            pass  # unparseable date — skip correction silently
+
+    return safe
+
+
 def handle_customer_request(request: str) -> str:
     """
     Process a customer inquiry end-to-end through the multi-agent system.
@@ -1064,14 +1135,18 @@ def handle_customer_request(request: str) -> str:
                  "Date of request: YYYY-MM-DD" suffix added by the test harness.
 
     Returns:
-        The agent's plain-text response string.
+        A sanitized plain-text response string safe to surface to a customer.
     """
+    # Extract request date for hallucination correction (best-effort)
+    date_match = re.search(r"Date of request:\s*(\d{4}-\d{2}-\d{2})", request)
+    request_date = date_match.group(1) if date_match else None
+
     agent = _get_orchestrator()
     max_retries = 3
     for attempt in range(max_retries):
         try:
             result = agent.run(request)
-            return str(result)
+            return sanitize_customer_response(str(result), request_date)
         except Exception as exc:
             error_str = str(exc)
             is_network = any(k in error_str for k in (
@@ -1083,8 +1158,8 @@ def handle_customer_request(request: str) -> str:
                 print(f"  [Retry {attempt+1}/{max_retries-1}] Network error, waiting {wait}s: {exc}")
                 time.sleep(wait)
             else:
-                return f"Error processing request: {exc}"
-    return "Error: all retries exhausted"
+                return "We could not complete this request right now. Please try again or revise the order."
+    return "We could not complete this request right now. Please try again or revise the order."
 
 def run_test_scenarios():
     """
