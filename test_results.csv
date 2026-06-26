@@ -1,48 +1,61 @@
 request_id,request_date,cash_balance,inventory_value,response
-1,2025-04-01,45059.7,4940.299999999999,"Unfortunately, all requested paper supplies for the ceremony include: 200 sheets of A4 glossy paper, 100 sheets of heavy cardstock (white), and 100 sheets of colored paper (assorted colors) are currently out of stock. Therefore, the restocking orders cannot be processed, and no alternative products are available from suppliers. Immediate action may be needed to find alternative suppliers or products to fulfill your requirements by April 15, 2025."
-2,2025-04-03,42540.8,7179.200000000001,"The order for 500 sheets of regular poster paper and 300 rolls of party streamers could not be placed because both items are currently out of stock. Furthermore, balloons were not found in the catalog, so no order could be placed for them as well. It is recommended to source balloons from alternative suppliers or check back for restock dates on the poster paper and streamers."
-3,2025-04-04,41020.8,7679.200000000001,"The order for 10,000 sheets of A4 paper has been successfully processed for a total cost of $425.00. The delivery is scheduled for April 15, 2025. A3 paper and printer paper were unavailable and not included in the order."
-4,2025-04-05,41020.8,7679.200000000001,"Currently, we can fulfill the order for 250 sheets of A4 size printer paper at a total cost of $12.50. However, we cannot fulfill the order for 500 sheets of high-quality recycled cardstock in various colors due to all options being out of stock. A new order will need to be placed with suppliers to replenish the cardstock."
-5,2025-04-05,40750.8,7869.200000000001,"The order for 500 sheets of 8.5""x11"" colored paper, 300 sheets of cardstock in various colors, and 200 rolls of decorative washi tape has been successfully placed with a total cost of $123.74. Expected delivery date for all items is November 3, 2023."
-6,2025-04-06,38994.15,10262.849999999999,"The order for 300 sheets of Bright-colored paper and 300 sheets of Colored paper has been successfully confirmed and processed for delivery on 2023-10-08. Additionally, an attempt to process the order for 500 sheets of colorful construction paper and 200 sheets of cardstock totaling $60.09 will be reconsidered, as these items are now in stock and available."
-7,2025-04-07,38994.15,10262.849999999999,"The order for various paper supplies was partially successful. We can confirm the following:
+1,2025-04-01,42820.8,7179.200000000001,"Unfortunately, all requested paper supplies are out of stock, including alternatives for the A4 glossy paper, heavy cardstock (white), and colored paper (assorted colors). It is advisable to either explore other suppliers or wait for restocking. Please let me know how you wish to proceed."
+2,2025-04-03,42785.8,7204.200000000001,"Unfortunately, all requested items including colorful poster paper, streamers, and balloons are currently out of stock. Therefore, I am unable to fulfill your order or provide alternatives at this time. It is advisable to check back later or consider alternative suppliers for these items."
+3,2025-04-04,37167.34,13377.25,"The current order for paper supplies could not be fulfilled due to insufficient stock levels:
+1. 10,000 sheets of A4 paper - Only 83 units available.
+2. 500 reams of standard copy paper - Currently out of stock.
+3. 5,000 sheets of colored paper - Currently out of stock.
+ 
+As a result, the order could not be processed in time for the anticipated delivery by April 15, 2025. 
 
-- **Items Ordered:** 500 sheets of glossy A4 paper and 300 large poster boards (24"" x 36"") have been successfully processed and are in stock for delivery by April 15, 2025.
-- **Out of Stock Items:** The order for heavyweight cardstock (200 sheets) and matte A3 paper (1000 sheets) could not be finalized as both are currently out of stock. 
+Recommendation: Consider modifying the quantities of A4 paper or colored paper to match available stock or explore alternative suppliers for the needed amounts. Immediate restocking actions are advisable for future orders."
+4,2025-04-05,37167.34,13377.25,"I would like to proceed with purchasing 1333 sheets of high-quality recycled cardstock in various colors at a total cost of $199.95. Please confirm the order and the expected delivery date by April 15, 2025."
+5,2025-04-05,37092.34,13392.25,"Successfully placed an order for 200 rolls of Decorative Adhesive Tape at $40.00, expected delivery on April 9, 2025. Additionally, ordered 5529 sheets of colored paper at $0.10 per unit, totaling $552.90. Total cost is $592.90, within the budget of $600."
+6,2025-04-06,37001.34,13407.25,"Unfortunately, the original order for the paper supplies could not be finalized due to insufficient stock. A partial order of 100 units of colorful construction paper has been successfully placed and is expected to arrive by October 2, 2023. However, both white printer paper and additional colorful construction paper (for a total of 500 sheets) are currently out of stock and will be restocked by the same date. Please let me know if you would like to revise your order or await the restock."
+7,2025-04-07,31748.519999999997,17886.249999999996,"Restock orders have been successfully placed for the upcoming exhibition, including:
+- 500 sheets of glossy A4 paper at $100
+- 1000 sheets of matte A3 paper at $180
+- 300 sheets of poster boards (24"" x 36"") at $300
+- 200 sheets of heavyweight cardstock at $30.
 
-It is advisable to place a restock order for the heavyweight cardstock and matte A3 paper to fulfill upcoming needs."
-8,2025-04-07,38994.15,10262.849999999999,"The order for the paper supplies could not be fulfilled as there is insufficient stock for A4 glossy paper, A4 matte paper, and A5 colored paper; all are currently out of stock. However, there are 5000 units of generalized recycled paper available, but specifically A4 recycled paper is also out of stock. It is advisable to place a restock order for the A4 glossy, A4 matte, A5 colored, and A4 recycled paper to meet future demands."
-9,2025-04-07,38994.15,10262.849999999999,"The order for the requested paper supplies cannot be processed due to insufficient stock levels for key items and negative cash balance. The items included: 200 sheets of A4 white printer paper, 100 sheets of A3 glossy paper, and 50 packets of 100% recycled kraft paper envelopes. Immediate action is needed to replenish stock and resolve cash flow issues before future orders can be fulfilled."
-13,2025-04-08,38884.15,10372.849999999999,"Both requested items, A4 printing paper and cardstock, are currently out of stock for the desired delivery date of April 10, 2025. The generated quote for the order is $51.06, which includes 500 sheets of A4 paper at $23.75 (after a 5% discount) and 200 sheets of cardstock at $30.00. However, since both items cannot be fulfilled, it is recommended to seek alternative suppliers or products."
-12,2025-04-08,38789.15,10467.849999999999,"Orders placed successfully: 200 sheets of colorful cardstock for $20.00 and 500 sheets of standard printer paper for $19.00, with delivery expected by April 19, 2024. Paper napkins are currently out of stock and will need to be ordered separately."
-10,2025-04-08,38487.35,10769.65,"The order for 500 sheets of high-quality glossy paper and 300 sheets of sturdy cardstock could not be finalized due to insufficient stock for both items. While restock orders have been placed, they will arrive on October 8, 2023, and cannot fulfill the immediate needs for fulfillment of an order expected by April 15, 2025."
-11,2025-04-08,38333.35,10869.65,"Restock orders have been placed for the requested items to fulfill your order for the exhibition. 
+The total cost of the order is $610, which is significantly under the budget of $2000. All items are scheduled to be delivered by October 6, 2023."
+8,2025-04-07,31028.519999999997,18186.249999999996,"Unfortunately, the items I requested (A4 glossy paper and A4 recycled paper) are currently out of stock and cannot be processed. I recommend checking back later for restock options or considering alternative paper supplies that may meet our needs for the ceremony."
+9,2025-04-07,31028.519999999997,18186.249999999996,"Order Summary:
+- A4 White Printer Paper: 200 sheets, total cost = $10.00
+- A3 Glossy Paper: 100 sheets, total cost = $20.00
+- Recycled Paper Envelopes: 50 units at $0.0800 each, total cost = $4.00
 
-1. **A3 Glossy Paper:** 500 sheets have been restocked, expected delivery by 2023-10-09, costing $100.00.
-2. **A4 Matte Paper:** 300 sheets have also been restocked, expected delivery by 2023-10-07, costing $54.00.
+Total cost: $34.00 (within budget)
+Expected delivery date: April 10, 2025."
+10,2025-04-08,30588.519999999997,18626.249999999996,"The best available offer is to order 4000 sheets of A4 printing paper for $200.00, scheduled for delivery by April 21, 2025. Unfortunately, I was unable to secure 200 sheets of cardstock as the stock is currently unavailable. Please consider alternative suppliers for the cardstock or different products."
+11,2025-04-08,30478.519999999993,18666.249999999996,"I have successfully placed an order for 200 sheets of cardstock and 100 paper napkins for a total cost of $32.00. The expected delivery date is April 15, 2025. This is well within the budget of approximately $200."
+12,2025-04-08,30478.519999999993,18666.249999999996,"The initial request for 500 sheets of high-quality glossy paper and 300 sheets of sturdy cardstock could not be fulfilled due to insufficient stock. As an alternative, I was offered 500 sheets of standard cardstock at $0.1500 per sheet and 300 sheets of glossy paper at $0.2000 per sheet, totaling $121.84. This is within my budget of $600, and the expected delivery date is April 15, 2025. However, attempts to confirm this order also failed due to continued stock issues. Therefore, I need to continue seeking alternatives or negotiate further."
+13,2025-04-08,30358.519999999993,18666.249999999996,"The order for paper supplies cannot be fulfilled at this time due to the supplier's financial difficulties and inability to handle new sales. However, they have confirmed a restock of Bright-Colored Paper with a delivery date of October 8, 2023. Please consider this for future orders, as the current supply situation does not meet my request for 500 sheets of A3 glossy paper and 300 sheets of A4 matte paper."
+14,2025-04-09,28809.019999999997,18515.749999999996,"The order has been successfully placed for the following paper supplies:
 
-Overall, your requests for exhibition supplies will be fulfilled."
-14,2025-04-09,37291.75,11911.25,"The large order for high-quality paper supplies could not be fulfilled due to insufficient stock levels for both the poster paper and cardstock, as well as a negative cash balance of -$5,299.05. Currently, the company has sufficient A4 paper in stock but cannot finalize the order for 5,000 sheets of A4 paper, 2,000 sheets of poster paper, and 500 sheets of cardstock. Management should consider strategies to improve cash flow and replenish inventory."
-15,2025-04-12,34223.1,14979.9,"The inventory levels indicate insufficient stock for the upcoming order of 10,000 sheets of A4 white paper, 5,000 sheets of colored paper, and 500 reams of cardboard for signage. Restocking orders for colored paper and cardstock have been initiated, but the current stock is 0 for all items. Please ensure to place restock orders promptly to facilitate the upcoming sales."
-16,2025-04-13,34223.1,14979.9,"500 sheets of A4 printer paper can be ordered, but colorful construction paper and poster board are currently out of stock and cannot be ordered at this time."
-17,2025-04-14,33933.1,15029.9,"The order for paper supplies cannot be fulfilled due to insufficient stock of all requested items (including A4 white printer paper, A3 colored paper, paper napkins, biodegradable paper cups, and biodegradable paper plates). Restocking orders have been placed, but they will not arrive in time for the reception on April 15, 2025. Please consider adjusting the order or finding alternative supplies."
-18,2025-04-14,33798.1,15124.9,"Restock orders were successfully placed for the necessary paper supplies. The expected delivery date for the restock is October 10, 2023. Once the items arrive and stock levels are confirmed, the sales transaction for the order of 500 sheets of high-quality white cardstock, 1000 sheets of standard printing paper, and 200 sheets of colored paper can be finalized with a total estimated cost of $120.89."
-19,2025-04-15,29607.1,19024.899999999998,"Dear [Manufacturer's Name],
+1. **A4 Paper**: 3,010 sheets for $150.50 (already fulfilled).
+2. **220 gsm Poster Paper**: 2,000 sheets for $700.00, expected delivery date is October 17, 2023.
+3. **250 gsm Cardstock**: 500 sheets for $150.00, expected delivery date is October 14, 2023.
 
-I hope this message finds you well. I would like to place an order for the following paper supplies for our upcoming exhibition:
+Total cost: $150.50 + $700.00 + $150.00 = $1,000.50. 
 
-- 2000 sheets of A4 glossy paper
-- 1500 sheets of A3 matte paper
-- 1000 sheets of cardstock in assorted colors
+Since the total cost aligns well within the budget of $2,000, the order is on track to meet the delivery needs for the upcoming performance."
+15,2025-04-12,26629.019999999997,20635.75,"All requested high-quality paper supplies are currently out of stock and cannot be fulfilled. The suggested alternatives include 3488 units of cardstock, 8029 units of colored paper, and 300 units of construction paper for approximately $1114.63. However, the order cannot be finalized due to lack of inventory. It is recommended to seek alternative suppliers or consider lower quantities that are available."
+16,2025-04-13,26427.019999999997,20740.75,"The order has been confirmed for the following items:
+- 500 sheets of A4 printer paper
+- 200 sheets of colorful construction paper
+- 100 sheets of 220 gsm poster paper
 
-We kindly request that the supplies be delivered by April 20, 2025.
+Total cost: $162.00 (within the budget of $200).
+Delivery is scheduled for April 16, 2025."
+17,2025-04-14,17839.22,28362.549999999996,"All requested items are currently out of stock, including:
+1. A3 colored paper
+2. Table covers (substituting for napkins)
+3. Biodegradable paper cups
+4. Biodegradable paper plates
 
-Thank you for your attention to this order. Please confirm the availability of these items and provide any necessary details regarding pricing and delivery.
-
-Best regards,
-
-[Your Name]  
-[Your Position]  
-[Your Company]  
-[Your Contact Information]  "
-20,2025-04-17,27657.1,19224.899999999998,"Due to insufficient stock of all requested items for the upcoming concert, including 5,000 flyers, 2,000 posters, 10,000 tickets, and various decorative supplies, there are alternatives suggested, but currently, all suggested substitutes are also out of stock. Immediate action is required to explore alternative products or suppliers to fulfill the event's needs by May 15, 2025."
+Despite a total cost quoted of $2723.65 with discounts applied, the sales transaction couldn't be processed. 
+This means exploring alternative suppliers or other options is necessary to fulfill the order for the upcoming reception, which is intended to be delivered by April 15, 2025."
+18,2025-04-14,17769.32,28393.449999999997,"Unfortunately, all requested paper supplies are currently out of stock, and the company is experiencing challenges with stock replenishment due to a negative cash balance. As such, I am unable to place an order for the paper supplies at this time."
+19,2025-04-15,15136.019999999997,30273.75,"I would like to proceed with Combination 2: 600 units of A4 Paper, 800 units of Glossy Paper, and 50 units of 250 gsm Cardstock at a total cost of $185.73. The expected delivery date is April 20, 2025."
+20,2025-04-17,15136.019999999997,30273.75,"Unfortunately, Beaver's Choice Paper Company does not have the requested paper supplies available, including 5,000 flyers, 2,000 posters, and 10,000 tickets, nor do they have alternative options for posters or tickets. It may be necessary to explore other suppliers to fulfill this order."
